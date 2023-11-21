@@ -15,6 +15,9 @@
     {{count * 2}}
   </BlueButton>
   <Input :value="initialInput" />
+  <Input2 :value="initialInput" @input="(e) => {
+    this.initialInput = e.target.value
+  }"/>
 </template>
 
 <script>
@@ -38,6 +41,12 @@ const Input = styled('input')`
   font-size: 1rem;
 `
 
+const Input2 = styled('input')`
+  border: 1px solid #e2e2e2;
+  padding: 10px;
+  font-size: 1rem;
+`
+
 const GlobalStyle = createGlobalStyle`
   body {
     background: gray;
@@ -51,6 +60,7 @@ export default {
     Button,
     BlueButton,
     Input,
+    Input2,
     GlobalStyle,
   },
   data() {

@@ -1,6 +1,12 @@
-import { h } from 'vue'
+import {
+  inject,
+  defineComponent,
+  h
+} from 'vue'
+import createCache                         from '@emotion/cache'
 import { getRegisteredStyles, insertStyles } from '@emotion/utils'
 import { serializeStyles } from '@emotion/serialize'
+
 
 const ILLEGAL_ESCAPE_SEQUENCE_ERROR =
   process.env.NODE_ENV === 'production' ?
@@ -22,14 +28,20 @@ const createStyled = (tag, options = {}) => {
   const identifierName = options.label
   const targetClassName = options.target
 
-  const isReal = tag.__emotion_real === tag
-  const baseTag = (isReal && tag.__emotion_base) || tag
+  let isReal = tag.__emotion_real === tag
+  let baseTag = (isReal && tag.__emotion_base) || tag
+
+  let defaultProps = typeof tag === 'string' ? undefined : tag.defaultProps
+
+  if (typeof tag !== 'string') {
+    isReal = tag.__emotion_real === tag
+    baseTag = (isReal && tag.__emotion_base) || tag
+  }
 
   return function (...args) {
-    const styles =
-      isReal && tag.__emotion_styles !== undefined ?
-        tag.__emotion_styles.slice(0) :
-        []
+    let styles = isReal && typeof tag !== 'string' && tag.__emotion_styles !== undefined
+      ? tag.__emotion_styles.slice(0)
+      : []
 
     if (identifierName !== undefined) {
       styles.push(`label:${identifierName};`)
@@ -54,83 +66,66 @@ const createStyled = (tag, options = {}) => {
       }
     }
 
-    const Styled = {
-      inheritAttrs: false,
-      inject: {
-        theme: {
-          default: undefined
-        },
-        $emotionCache: {
-          default: null,
-        }
+    const component = defineComponent({
+      'displayName': identifierName !== undefined ? identifierName : `Styled(${
+        typeof baseTag === 'string' ? baseTag : baseTag.displayName || baseTag.name || 'Component'
+      })`,
+      'defaultProps': defaultProps,
+      '__emotion_base': baseTag,
+      '__emotion_styles': styles,
+      'withComponent': (nextTag, nextOptions) => {
+        return createStyled(
+          nextTag,
+          nextOptions === undefined ?
+            options :
+            {...(options || {}), ...nextOptions}
+        )(...styles)
       },
+      setup(props, {slots, attrs = {}}) {
 
-      render(renderContext) {
-        const { theme } = renderContext
-        const { $attrs, $options, $slots, $props, $parent } = renderContext
+        const emotionCache = inject('$emotionCache')
+        const theme = inject('theme', undefined)
 
-        const cache = this.$emotionCache
-        const { as, ...restAttrs } = $attrs || {}
-
-        let className = ''
-        const finalTag = as || baseTag
         const classInterpolations = []
         const mergedProps = {
-          ...$attrs,
-          theme: theme || this.theme || {},
+          ...attrs,
+          theme
         }
+        const newProps = {...(defaultProps || {}), ...props}
 
-        if ($attrs.class) {
-          className += getRegisteredStyles(
-            cache.registered,
+        let classNames = ''
+        if (attrs.class) {
+          classNames += getRegisteredStyles(
+            emotionCache.registered,
             classInterpolations,
-            $attrs.class
+            ''
           )
         }
 
+
         const serialized = serializeStyles(
           styles.concat(classInterpolations),
-          cache.registered,
+          emotionCache.registered,
           mergedProps
         )
 
         insertStyles(
-          cache,
+          emotionCache,
           serialized,
-          typeof finalTag === 'string'
+          typeof baseTag === 'string'
         )
 
-        className += `${cache.key}-${serialized.name}`
+        classNames += `${emotionCache.key}-${serialized.name}`
         if (targetClassName !== undefined) {
-          className += ` ${targetClassName}`
+          classNames += ` ${targetClassName}`
         }
 
-        const renderProps = {
-          ...$props,
-          ...(options.getAttrs ? options.getAttrs(restAttrs) : restAttrs),
-          class: className,
-        }
 
-        return h(
-          finalTag,
-          renderProps,
-          $slots
-        )
+        return () => h(baseTag, {class:classNames, ...newProps}, slots)
       }
-    }
+    })
 
-    Styled.name =
-      identifierName === undefined ?
-        `Styled${
-          typeof baseTag === 'string' ? baseTag : baseTag.name || 'Component'
-        }` :
-        identifierName
-
-    Styled.__emotion_real = Styled
-    Styled.__emotion_base = baseTag
-    Styled.__emotion_styles = styles
-
-    Object.defineProperty(Styled, 'toString', {
+    Object.defineProperty(component, 'toString', {
       value() {
         if (
           targetClassName === undefined &&
@@ -138,21 +133,13 @@ const createStyled = (tag, options = {}) => {
         ) {
           return 'NO_COMPONENT_SELECTOR'
         }
-
         return `.${targetClassName}`
       }
     })
 
-    Styled.withComponent = (nextTag, nextOptions) => {
-      return createStyled(
-        nextTag,
-        nextOptions === undefined ?
-          options :
-          { ...(options || {}), ...nextOptions }
-      )(...styles)
-    }
+    component.__emotion_real = component
 
-    return Styled
+    return component
   }
 }
 
