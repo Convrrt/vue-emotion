@@ -1,7 +1,7 @@
 import {
   inject,
   defineComponent,
-  h
+  h, getCurrentInstance
 } from 'vue'
 import createCache                         from '@emotion/cache'
 import { getRegisteredStyles, insertStyles } from '@emotion/utils'
@@ -82,15 +82,19 @@ const createStyled = (tag, options = {}) => {
             {...(options || {}), ...nextOptions}
         )(...styles)
       },
-      setup(props, {slots, attrs = {}}) {
+      setup(props, {slots, attrs = {}, root}) {
 
         const emotionCache = inject('$emotionCache', createCache({key: 'css'}))
         const theme = inject('theme', {})
+        const instance = getCurrentInstance();
 
         const classInterpolations = []
         const mergedProps = {
           ...attrs,
-          theme
+          theme,
+          $parent: instance.parent,
+          parent: instance.parent,
+          root
         }
         const newProps = {...(defaultProps || {}), ...props}
 
