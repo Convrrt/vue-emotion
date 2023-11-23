@@ -44,7 +44,7 @@ const Input = styled('input')`
 const Input2 = styled('input')`
   border: 1px solid #e2e2e2;
   padding: ${props => {
-    return `${props.$ctx.padding}px;`
+    return `${props.$parentContext.padding}px;`
   }}
   font-size: 1rem;
 `
