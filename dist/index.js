@@ -79,15 +79,19 @@ const createStyled = (tag, options = {}) => {
             {...(options || {}), ...nextOptions}
         )(...styles)
       },
-      setup(props, {slots, attrs = {}}) {
+      setup(props, {slots, attrs = {}, root}) {
 
         const emotionCache = vue.inject('$emotionCache', createCache({key: 'css'}));
         const theme = vue.inject('theme', {});
+        const instance = vue.getCurrentInstance();
 
         const classInterpolations = [];
         const mergedProps = {
           ...attrs,
-          theme
+          theme,
+          $parentContext: instance.parent.ctx,
+          parent: instance.parent,
+          root
         };
         const newProps = {...(defaultProps || {}), ...props};
 

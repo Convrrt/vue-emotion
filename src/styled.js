@@ -92,7 +92,7 @@ const createStyled = (tag, options = {}) => {
         const mergedProps = {
           ...attrs,
           theme,
-          $parent: instance.parent,
+          $parentContext: instance.parent.ctx,
           parent: instance.parent,
           root
         }

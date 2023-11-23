@@ -1,6 +1,6 @@
 import createCache from '@emotion/cache';
 export { default as createCache } from '@emotion/cache';
-import { defineComponent, inject, h } from 'vue';
+import { defineComponent, inject, getCurrentInstance, h } from 'vue';
 import { getRegisteredStyles, insertStyles } from '@emotion/utils';
 import { serializeStyles } from '@emotion/serialize';
 import { nanoid } from 'nanoid';
@@ -78,15 +78,19 @@ const createStyled = (tag, options = {}) => {
             {...(options || {}), ...nextOptions}
         )(...styles)
       },
-      setup(props, {slots, attrs = {}}) {
+      setup(props, {slots, attrs = {}, root}) {
 
         const emotionCache = inject('$emotionCache', createCache({key: 'css'}));
         const theme = inject('theme', {});
+        const instance = getCurrentInstance();
 
         const classInterpolations = [];
         const mergedProps = {
           ...attrs,
-          theme
+          theme,
+          $parentContext: instance.parent.ctx,
+          parent: instance.parent,
+          root
         };
         const newProps = {...(defaultProps || {}), ...props};
 

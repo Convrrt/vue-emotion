@@ -43,7 +43,9 @@ const Input = styled('input')`
 
 const Input2 = styled('input')`
   border: 1px solid #e2e2e2;
-  padding: 10px;
+  padding: ${props => {
+    return `${props.$ctx.padding}px;`
+  }}
   font-size: 1rem;
 `
 
@@ -62,6 +64,11 @@ export default {
     Input,
     Input2,
     GlobalStyle,
+  },
+  computed: {
+    padding() {
+      return 10
+    }
   },
   data() {
     return {
