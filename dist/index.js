@@ -4,6 +4,7 @@ var createCache = require('@emotion/cache');
 var vue = require('vue');
 var utils = require('@emotion/utils');
 var serialize = require('@emotion/serialize');
+var nanoid = require('nanoid');
 
 const ILLEGAL_ESCAPE_SEQUENCE_ERROR =
   process.env.NODE_ENV === 'production' ?
@@ -80,8 +81,8 @@ const createStyled = (tag, options = {}) => {
       },
       setup(props, {slots, attrs = {}}) {
 
-        const emotionCache = vue.inject('$emotionCache');
-        const theme = vue.inject('theme', undefined);
+        const emotionCache = vue.inject('$emotionCache', createCache({key: 'css'}));
+        const theme = vue.inject('theme', {});
 
         const classInterpolations = [];
         const mergedProps = {
@@ -99,7 +100,6 @@ const createStyled = (tag, options = {}) => {
           );
         }
 
-
         const serialized = serialize.serializeStyles(
           styles.concat(classInterpolations),
           emotionCache.registered,
@@ -116,9 +116,11 @@ const createStyled = (tag, options = {}) => {
         if (targetClassName !== undefined) {
           classNames += ` ${targetClassName}`;
         }
+        const key = nanoid.nanoid(6);
+        console.log("Vue Emotion - Component Key: ", key);
 
-
-        return () => vue.h(baseTag, {class:classNames, ...newProps}, slots)
+        const component_props = {class:classNames, ...newProps, key: key};
+        return () => vue.h(baseTag, component_props, slots)
       }
     });
 
