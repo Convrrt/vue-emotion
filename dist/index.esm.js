@@ -1,6 +1,6 @@
 import createCache from '@emotion/cache';
 export { default as createCache } from '@emotion/cache';
-import { defineComponent, inject, getCurrentInstance, h } from 'vue';
+import { defineComponent, inject, h } from 'vue';
 import { getRegisteredStyles, insertStyles } from '@emotion/utils';
 import { serializeStyles } from '@emotion/serialize';
 import { nanoid } from 'nanoid';
@@ -78,18 +78,18 @@ const createStyled = (tag, options = {}) => {
             {...(options || {}), ...nextOptions}
         )(...styles)
       },
-      setup(props, {slots, attrs = {}, root}) {
+      setup(props, {slots, attrs = {}}) {
+
+        const { as, theme, ...restAttrs } = attrs || {};
+        const finalTag = as || baseTag;
 
         const emotionCache = inject('$emotionCache', createCache({key: 'css'}));
-        const theme = inject('theme', {});
-        const instance = getCurrentInstance();
+        const finalTheme = theme || inject('theme', {});
 
         const classInterpolations = [];
         const mergedProps = {
           ...attrs,
-          theme,
-          $parentContext: instance.parent.ctx ? instance.parent.ctx.$parent ? instance.parent.ctx.$parent:  instance.parent.ctx :  instance.parent.ctx,
-          root
+          theme: finalTheme,
         };
         const newProps = {...(defaultProps || {}), ...props};
 
@@ -111,7 +111,7 @@ const createStyled = (tag, options = {}) => {
         insertStyles(
           emotionCache,
           serialized,
-          typeof baseTag === 'string'
+          typeof finalTag === 'string'
         );
 
         classNames += `${emotionCache.key}-${serialized.name}`;
@@ -119,10 +119,10 @@ const createStyled = (tag, options = {}) => {
           classNames += ` ${targetClassName}`;
         }
         const key = nanoid(6);
-        console.log("Vue Emotion - Component Key: ", key);
+        console.debug("Vue Emotion - Component Created: ", key);
 
         const component_props = {class:classNames, ...newProps, key: key};
-        return () => h(baseTag, component_props, slots)
+        return () => h(finalTag, component_props, slots)
       }
     });
 

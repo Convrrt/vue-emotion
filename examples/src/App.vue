@@ -8,14 +8,14 @@
     {{count}}
   </Button>
 
-  <BlueButton
+  <BlueButton as="a"
     class="hello"
     @click="() => count++"
   >
     {{count * 2}}
   </BlueButton>
   <Input :value="initialInput" />
-  <Input2 :value="initialInput2" @input="(e) => {
+  <Input2 :value="initialInput2" :theme="localTheme" @input="(e) => {
     initialInput2 = e.target.value
   }"/>
 </template>
@@ -43,8 +43,9 @@ const Input = styled('input')`
 
 const Input2 = styled('input')`
   border: 1px solid #e2e2e2;
+  background-color: ${props => props.theme.background};
   padding: ${props => {
-    return `${props.$parentContext.padding}px;`
+    return `${props.theme.padding}px;`
   }}
   font-size: 1rem;
 `
@@ -75,6 +76,7 @@ export default {
       count: 0,
       initialInput: 'some text',
       initialInput2: 'some text',
+      localTheme: {padding: 10, background: 'red'}
     }
   }
 }

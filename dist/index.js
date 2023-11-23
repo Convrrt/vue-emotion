@@ -79,18 +79,18 @@ const createStyled = (tag, options = {}) => {
             {...(options || {}), ...nextOptions}
         )(...styles)
       },
-      setup(props, {slots, attrs = {}, root}) {
+      setup(props, {slots, attrs = {}}) {
+
+        const { as, theme, ...restAttrs } = attrs || {};
+        const finalTag = as || baseTag;
 
         const emotionCache = vue.inject('$emotionCache', createCache({key: 'css'}));
-        const theme = vue.inject('theme', {});
-        const instance = vue.getCurrentInstance();
+        const finalTheme = theme || vue.inject('theme', {});
 
         const classInterpolations = [];
         const mergedProps = {
           ...attrs,
-          theme,
-          $parentContext: instance.parent.ctx ? instance.parent.ctx.$parent ? instance.parent.ctx.$parent:  instance.parent.ctx :  instance.parent.ctx,
-          root
+          theme: finalTheme,
         };
         const newProps = {...(defaultProps || {}), ...props};
 
@@ -112,7 +112,7 @@ const createStyled = (tag, options = {}) => {
         utils.insertStyles(
           emotionCache,
           serialized,
-          typeof baseTag === 'string'
+          typeof finalTag === 'string'
         );
 
         classNames += `${emotionCache.key}-${serialized.name}`;
@@ -120,10 +120,10 @@ const createStyled = (tag, options = {}) => {
           classNames += ` ${targetClassName}`;
         }
         const key = nanoid.nanoid(6);
-        console.log("Vue Emotion - Component Key: ", key);
+        console.debug("Vue Emotion - Component Created: ", key);
 
         const component_props = {class:classNames, ...newProps, key: key};
-        return () => vue.h(baseTag, component_props, slots)
+        return () => vue.h(finalTag, component_props, slots)
       }
     });
 
