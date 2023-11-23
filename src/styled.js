@@ -6,6 +6,7 @@ import {
 import createCache                         from '@emotion/cache'
 import { getRegisteredStyles, insertStyles } from '@emotion/utils'
 import { serializeStyles } from '@emotion/serialize'
+import {nanoid} from "nanoid";
 
 
 const ILLEGAL_ESCAPE_SEQUENCE_ERROR =
@@ -83,8 +84,8 @@ const createStyled = (tag, options = {}) => {
       },
       setup(props, {slots, attrs = {}}) {
 
-        const emotionCache = inject('$emotionCache')
-        const theme = inject('theme', undefined)
+        const emotionCache = inject('$emotionCache', createCache({key: 'css'}))
+        const theme = inject('theme', {})
 
         const classInterpolations = []
         const mergedProps = {
@@ -102,7 +103,6 @@ const createStyled = (tag, options = {}) => {
           )
         }
 
-
         const serialized = serializeStyles(
           styles.concat(classInterpolations),
           emotionCache.registered,
@@ -119,9 +119,11 @@ const createStyled = (tag, options = {}) => {
         if (targetClassName !== undefined) {
           classNames += ` ${targetClassName}`
         }
+        const key = nanoid(6)
+        console.log("Vue Emotion - Component Key: ", key)
 
-
-        return () => h(baseTag, {class:classNames, ...newProps}, slots)
+        const component_props = {class:classNames, ...newProps, key: key}
+        return () => h(baseTag, component_props, slots)
       }
     })
 

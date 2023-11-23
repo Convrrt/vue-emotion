@@ -15,8 +15,8 @@
     {{count * 2}}
   </BlueButton>
   <Input :value="initialInput" />
-  <Input2 :value="initialInput" @input="(e) => {
-    this.initialInput = e.target.value
+  <Input2 :value="initialInput2" @input="(e) => {
+    initialInput2 = e.target.value
   }"/>
 </template>
 
@@ -66,7 +66,8 @@ export default {
   data() {
     return {
       count: 0,
-      initialInput: 'some text'
+      initialInput: 'some text',
+      initialInput2: 'some text',
     }
   }
 }
