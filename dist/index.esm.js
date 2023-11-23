@@ -88,8 +88,7 @@ const createStyled = (tag, options = {}) => {
         const mergedProps = {
           ...attrs,
           theme,
-          $parentContext: instance.parent.ctx,
-          parent: instance.parent,
+          $parentContext: instance.parent.ctx ? instance.parent.ctx.$parent ? instance.parent.ctx.$parent:  instance.parent.ctx :  instance.parent.ctx,
           root
         };
         const newProps = {...(defaultProps || {}), ...props};
