@@ -68,67 +68,69 @@ const createStyled = (tag, options = {}) => {
     }
 
     const component = defineComponent({
-      'displayName': identifierName !== undefined ? identifierName : `Styled(${
-        typeof baseTag === 'string' ? baseTag : baseTag.displayName || baseTag.name || 'Component'
-      })`,
-      'defaultProps': defaultProps,
-      '__emotion_base': baseTag,
-      '__emotion_styles': styles,
-      'withComponent': (nextTag, nextOptions) => {
+      "displayName": identifierName !== void 0 ? identifierName : `Styled(${typeof baseTag === "string" ? baseTag : baseTag.displayName || baseTag.name || "Component"})`,
+      "defaultProps": defaultProps,
+      "__emotion_base": baseTag,
+      "__emotion_styles": styles,
+      "withComponent": (nextTag, nextOptions) => {
         return createStyled(
           nextTag,
-          nextOptions === undefined ?
-            options :
-            {...(options || {}), ...nextOptions}
-        )(...styles)
+          nextOptions === void 0 ? options : { ...options || {}, ...nextOptions }
+        )(...styles);
       },
-      setup(props, {slots, attrs = {}}) {
+      setup(props, { slots, attrs = {} }) {
+        const { as, theme, ...restAttrs } = attrs || {};
 
-        const { as, theme, ...restAttrs } = attrs || {}
-        const finalTag = as || baseTag
+        const finalTag = as || baseTag;
+        const emotionCache = inject("$emotionCache", createCache({ key: "css" }));
 
-        const emotionCache = inject('$emotionCache', createCache({key: 'css'}))
-        const finalTheme = theme || inject('theme', {})
+        const finalTheme = theme || inject("theme", {});
 
-        const classInterpolations = []
-        const mergedProps = {
-          ...attrs,
-          theme: finalTheme,
-        }
-        const newProps = {...(defaultProps || {}), ...props}
+        console.debug("Vue Emotion - Component Created: ");
 
-        let classNames = ''
-        if (attrs.class) {
-          classNames += getRegisteredStyles(
+        return () => {
+          const classInterpolations = [];
+
+          const mergedProps = {
+            ...attrs,
+            theme: finalTheme
+          };
+
+          const newProps = { ...defaultProps || {}, ...props };
+          let classNames = "";
+
+          if (attrs.class) {
+            classNames += getRegisteredStyles(
+              emotionCache.registered,
+              classInterpolations,
+              ""
+            );
+          }
+
+          const serialized = serializeStyles(
+            styles.concat(classInterpolations),
             emotionCache.registered,
-            classInterpolations,
-            ''
-          )
+            mergedProps
+          );
+
+          insertStyles(
+            emotionCache,
+            serialized,
+            typeof finalTag === "string"
+          );
+
+          classNames += `${emotionCache.key}-${serialized.name}`;
+          if (targetClassName !== void 0) {
+            classNames += ` ${targetClassName}`;
+          }
+
+          console.debug("Vue Emotion - Component Rendered: ");
+          const component_props = { class: classNames, ...newProps };
+
+          return h(finalTag, component_props, slots);
         }
-
-        const serialized = serializeStyles(
-          styles.concat(classInterpolations),
-          emotionCache.registered,
-          mergedProps
-        )
-
-        insertStyles(
-          emotionCache,
-          serialized,
-          typeof finalTag === 'string'
-        )
-
-        classNames += `${emotionCache.key}-${serialized.name}`
-        if (targetClassName !== undefined) {
-          classNames += ` ${targetClassName}`
-        }
-        const key = nanoid(6)
-        console.debug("Vue Emotion - Component Created: ", key)
-
-        const component_props = {class:classNames, ...newProps, key: key}
-        return () => h(finalTag, component_props, slots)
       }
-    })
+    });
 
     Object.defineProperty(component, 'toString', {
       value() {

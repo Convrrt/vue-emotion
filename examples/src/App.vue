@@ -15,7 +15,7 @@
     {{count * 2}}
   </BlueButton>
   <Input :value="initialInput" />
-  <Input2 :value="initialInput2" :theme="localTheme" @input="(e) => {
+  <Input2 :value="initialInput2" :padding="count" :theme="localTheme" @input="(e) => {
     initialInput2 = e.target.value
   }"/>
 </template>
@@ -41,11 +41,11 @@ const Input = styled('input')`
   font-size: 1rem;
 `
 
-const Input2 = styled('input')`
+const Input2 = styled('input', {mixins: []})`
   border: 1px solid #e2e2e2;
   background-color: ${props => props.theme.background};
   padding: ${props => {
-    return `${props.theme.padding}px;`
+    return `${props.padding}px;`
   }}
   font-size: 1rem;
 `
@@ -73,7 +73,7 @@ export default {
   },
   data() {
     return {
-      count: 0,
+      count: 10,
       initialInput: 'some text',
       initialInput2: 'some text',
       localTheme: {padding: 10, background: 'red'}
