@@ -4,7 +4,7 @@ var createCache = require('@emotion/cache');
 var vue = require('vue');
 var utils = require('@emotion/utils');
 var serialize = require('@emotion/serialize');
-var nanoid = require('nanoid');
+require('nanoid');
 
 const ILLEGAL_ESCAPE_SEQUENCE_ERROR =
   process.env.NODE_ENV === 'production' ?
@@ -65,65 +65,67 @@ const createStyled = (tag, options = {}) => {
     }
 
     const component = vue.defineComponent({
-      'displayName': identifierName !== undefined ? identifierName : `Styled(${
-        typeof baseTag === 'string' ? baseTag : baseTag.displayName || baseTag.name || 'Component'
-      })`,
-      'defaultProps': defaultProps,
-      '__emotion_base': baseTag,
-      '__emotion_styles': styles,
-      'withComponent': (nextTag, nextOptions) => {
+      "displayName": identifierName !== void 0 ? identifierName : `Styled(${typeof baseTag === "string" ? baseTag : baseTag.displayName || baseTag.name || "Component"})`,
+      "defaultProps": defaultProps,
+      "__emotion_base": baseTag,
+      "__emotion_styles": styles,
+      "withComponent": (nextTag, nextOptions) => {
         return createStyled(
           nextTag,
-          nextOptions === undefined ?
-            options :
-            {...(options || {}), ...nextOptions}
-        )(...styles)
+          nextOptions === void 0 ? options : { ...options || {}, ...nextOptions }
+        )(...styles);
       },
-      setup(props, {slots, attrs = {}}) {
-
+      setup(props, { slots, attrs = {} }) {
         const { as, theme, ...restAttrs } = attrs || {};
+
         const finalTag = as || baseTag;
+        const emotionCache = vue.inject("$emotionCache", createCache({ key: "css" }));
 
-        const emotionCache = vue.inject('$emotionCache', createCache({key: 'css'}));
-        const finalTheme = theme || vue.inject('theme', {});
+        const finalTheme = theme || vue.inject("theme", {});
 
-        const classInterpolations = [];
-        const mergedProps = {
-          ...attrs,
-          theme: finalTheme,
-        };
-        const newProps = {...(defaultProps || {}), ...props};
+        console.debug("Vue Emotion - Component Created: ");
 
-        let classNames = '';
-        if (attrs.class) {
-          classNames += utils.getRegisteredStyles(
+        return () => {
+          const classInterpolations = [];
+
+          const mergedProps = {
+            ...attrs,
+            theme: finalTheme
+          };
+
+          const newProps = { ...defaultProps || {}, ...props };
+          let classNames = "";
+
+          if (attrs.class) {
+            classNames += utils.getRegisteredStyles(
+              emotionCache.registered,
+              classInterpolations,
+              ""
+            );
+          }
+
+          const serialized = serialize.serializeStyles(
+            styles.concat(classInterpolations),
             emotionCache.registered,
-            classInterpolations,
-            ''
+            mergedProps
           );
+
+          utils.insertStyles(
+            emotionCache,
+            serialized,
+            typeof finalTag === "string"
+          );
+
+          classNames += `${emotionCache.key}-${serialized.name}`;
+          if (targetClassName !== void 0) {
+            classNames += ` ${targetClassName}`;
+          }
+
+          console.debug("Vue Emotion - Component Rendered: ");
+          const component_props = { class: classNames, ...newProps };
+
+          return vue.h(finalTag, component_props, slots);
         }
-
-        const serialized = serialize.serializeStyles(
-          styles.concat(classInterpolations),
-          emotionCache.registered,
-          mergedProps
-        );
-
-        utils.insertStyles(
-          emotionCache,
-          serialized,
-          typeof finalTag === 'string'
-        );
-
-        classNames += `${emotionCache.key}-${serialized.name}`;
-        if (targetClassName !== undefined) {
-          classNames += ` ${targetClassName}`;
-        }
-        const key = nanoid.nanoid(6);
-        console.debug("Vue Emotion - Component Created: ", key);
-
-        const component_props = {class:classNames, ...newProps, key: key};
-        return () => vue.h(finalTag, component_props, slots)
       }
     });
 
