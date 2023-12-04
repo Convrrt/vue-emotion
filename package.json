@@ -6,7 +6,7 @@
     "access": "public"
   },
   "repository": {
-    "url": "egoist/vue-emotion",
+    "url": "Convrrt/vue-emotion",
     "type": "git"
   },
   "main": "dist/index.js",
