@@ -1,6 +1,6 @@
 {
   "name": "@egoist/vue-emotion",
-  "version": "0.5.2",
+  "version": "0.5.3",
   "description": "Seamlessly use emotion (CSS-in-JS) with Vue.js",
   "publishConfig": {
     "access": "public"
